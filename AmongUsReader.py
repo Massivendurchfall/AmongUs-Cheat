@@ -132,7 +132,7 @@ class MemoryReader:
                 color_id = pm.read_uint(item_base + 0x28)
                 name_ptr = pm.read_uint(item_base + 0x1C)
                 name_len = pm.read_uint(name_ptr + 0x8)
-                name_addr = pm.read_uint(name_ptr + 0xC)
+                name_addr = name_ptr + 0xC
                 raw = pm.read_bytes(name_addr, name_len * 2)
                 name = raw.decode('utf-16').rstrip('\x00')
                 alive = role_name not in ["Dead", "Dead (Imp)", "Guardian Angel"]
@@ -176,7 +176,7 @@ class MemoryReader:
                 color_id = pm.read_uint(item_base + 0x48)
                 name_ptr = pm.read_ulonglong(item_base + 0x30)
                 name_len = pm.read_uint(name_ptr + 0x10)
-                name_addr = pm.read_ulonglong(name_ptr + 0x14)
+                name_addr = name_ptr + 0x14
                 raw = pm.read_bytes(name_addr, name_len * 2)
                 name = raw.decode('utf-16').rstrip('\x00')
                 alive = role_name not in ["Dead", "Dead (Imp)", "Guardian Angel"]
