@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import END
 import threading
 import keyboard
-import pymem
+import pymemA
 import os
 import sys
 import subprocess
@@ -36,7 +36,7 @@ class MemoryReader:
         self.row_widgets = {}
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
-        self.root.title("AUU – Player Inspector")
+        self.root.title("AmongUs Reader made by jlcfg")
         self.root.geometry("880x600")
         self.header = ctk.CTkLabel(self.root, text="Among Us – Player Inspector", font=("Segoe UI", 18, "bold"))
         self.header.pack(padx=12, pady=(12, 8))
