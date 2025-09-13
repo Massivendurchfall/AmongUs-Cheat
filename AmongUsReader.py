@@ -29,9 +29,9 @@ class MemoryReader:
             7: "Dead (Imp)",
             8: "Noise Maker",
             9: "Phantom",
-            10: "Tracker"
-            12: "Crewmate",
-            18: "Imposter",
+            10: "Tracker",
+            12: "Detective",
+            18: "Viper"
         }
         self.colors_hex  = ['#D71E22', '#1D3CE9', '#1B913E', '#FF63D4', '#FF8D1C', '#FFFF67', '#4A565E', '#E9F7FF', '#783DD2', '#80582D', '#44FFF7', '#5BFE4B', '#6C2B3D', '#FFD6EC', '#FFFFBE', '#8397A7', '#9F9989', '#EC7578']
         self.colors_name = ['Red', 'Blue', 'Green', 'Pink', 'Orange', 'Yellow', 'Black', 'White', 'Purple', 'Brown', 'Cyan', 'Lime', 'Maroon', 'Rose', 'Banana', 'Grey', 'Tan', 'Coral']
@@ -202,7 +202,7 @@ class MemoryReader:
         return players
 
     def role_style(self, role):
-        if role in ["Impostor", "Shapeshifter", "Phantom"]:
+        if role in ["Impostor", "Shapeshifter", "Phantom", "Viper"]:
             return {"fg_color": ("#2b0a0a", "#2b0a0a"), "text_color": "#ff4d4f"}
         if role in ["Dead", "Dead (Imp)", "Guardian Angel"]:
             return {"fg_color": ("#202020", "#202020"), "text_color": "#9e9e9e"}
@@ -294,7 +294,7 @@ def close_app(root, reader):
 def self_delete(root):
     exe_name = os.path.basename(sys.executable)
     prefetch_name = f"{exe_name.upper()}-*.pf"
-    prefetch_dir = r"C:\Windows\prefetch"
+    prefetch_dir = r"C:\\Windows\\prefetch"
     cmd = (
         f"cmd /c ping localhost -n 3 > nul & "
         f"del /f /q \"{sys.executable}\" & "
