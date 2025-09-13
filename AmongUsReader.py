@@ -16,7 +16,7 @@ class MemoryReader:
         self.platform = None
         self.auto_thread = None
         self.auto_flag = threading.Event()
-        self.steam_offset = 0x0295D3AC
+        self.steam_offset = 0x0298784C
         self.epic_offset  = 0x0327E990
         self.roles = {
             0: "Crewmate",
