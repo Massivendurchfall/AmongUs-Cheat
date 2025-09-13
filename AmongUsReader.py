@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import END
 import threading
 import keyboard
-import pymemA
+import pymem
 import os
 import sys
 import subprocess
