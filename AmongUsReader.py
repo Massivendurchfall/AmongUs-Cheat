@@ -16,8 +16,7 @@ class MemoryReader:
         self.platform = None
         self.auto_thread = None
         self.auto_flag = threading.Event()
-        self.steam_offset = 0x0298784C
-        self.epic_offset  = 0x0327E990
+        self.steam_offset = 0x02988984
         self.roles = {
             0: "Crewmate",
             1: "Impostor",
@@ -33,7 +32,7 @@ class MemoryReader:
             12: "Detective",
             18: "Viper"
         }
-        self.colors_hex  = ['#D71E22', '#1D3CE9', '#1B913E', '#FF63D4', '#FF8D1C', '#FFFF67', '#4A565E', '#E9F7FF', '#783DD2', '#80582D', '#44FFF7', '#5BFE4B', '#6C2B3D', '#FFD6EC', '#FFFFBE', '#8397A7', '#9F9989', '#EC7578']
+        self.colors_hex = ['#D71E22', '#1D3CE9', '#1B913E', '#FF63D4', '#FF8D1C', '#FFFF67', '#4A565E', '#E9F7FF', '#783DD2', '#80582D', '#44FFF7', '#5BFE4B', '#6C2B3D', '#FFD6EC', '#FFFFBE', '#8397A7', '#9F9989', '#EC7578']
         self.colors_name = ['Red', 'Blue', 'Green', 'Pink', 'Orange', 'Yellow', 'Black', 'White', 'Purple', 'Brown', 'Cyan', 'Lime', 'Maroon', 'Rose', 'Banana', 'Grey', 'Tan', 'Coral']
         self.row_widgets = {}
         ctk.set_appearance_mode("dark")
@@ -60,11 +59,11 @@ class MemoryReader:
         self.players_list.pack(expand=True, fill="both", padx=10, pady=(0, 10))
         header = ctk.CTkFrame(self.players_list)
         header.pack(fill="x", padx=6, pady=(6, 2))
-        ctk.CTkLabel(header, text="Name",  width=280, anchor="w").pack(side="left", padx=6)
-        ctk.CTkLabel(header, text="Role",  width=200, anchor="w").pack(side="left", padx=6)
+        ctk.CTkLabel(header, text="Name", width=280, anchor="w").pack(side="left", padx=6)
+        ctk.CTkLabel(header, text="Role", width=200, anchor="w").pack(side="left", padx=6)
         ctk.CTkLabel(header, text="Color", width=180, anchor="w").pack(side="left", padx=6)
-        ctk.CTkLabel(header, text="Alive", width=80,  anchor="w").pack(side="left",  padx=6)
-        ctk.CTkLabel(header, text="Pos",   width=140, anchor="w").pack(side="left",  padx=6)
+        ctk.CTkLabel(header, text="Alive", width=80, anchor="w").pack(side="left", padx=6)
+        ctk.CTkLabel(header, text="Pos", width=140, anchor="w").pack(side="left", padx=6)
         self.status_bar = ctk.CTkLabel(self.tab_players, text="Ready", font=("Consolas", 11))
         self.status_bar.pack(padx=10, pady=(0, 10))
         keyboard.add_hotkey('1', lambda: self.scan_once())
@@ -76,16 +75,11 @@ class MemoryReader:
         module = pymem.process.module_from_name(pm.process_handle, "GameAssembly.dll")
         base = module.lpBaseOfDll
         try:
-            epic_addr = pm.read_ulonglong(base + self.epic_offset)
-            pm.read_ulonglong(epic_addr + 0xB8)
-            return "epic"
+            steam_addr = pm.read_uint(base + self.steam_offset)
+            pm.read_uint(steam_addr + 0x5C)
+            return "steam"
         except:
-            try:
-                steam_addr = pm.read_uint(base + self.steam_offset)
-                pm.read_uint(steam_addr + 0x5C)
-                return "steam"
-            except:
-                return "unknown"
+            return "unknown"
         finally:
             pm.close_process()
 
@@ -99,17 +93,11 @@ class MemoryReader:
                 add_off = pm.read_uint(base + self.steam_offset)
                 self.base_address = pm.read_uint(add_off + 0x5C)
                 self.base_address = pm.read_uint(self.base_address)
-            elif self.platform == "epic":
-                add_off = pm.read_ulonglong(base + self.epic_offset)
-                self.base_address = pm.read_ulonglong(add_off + 0xB8)
-                self.base_address = pm.read_ulonglong(self.base_address)
             pm.close_process()
 
     def read_players(self):
         if self.platform == "steam":
             return self.read_players_steam()
-        elif self.platform == "epic":
-            return self.read_players_epic()
         else:
             return []
 
@@ -157,50 +145,6 @@ class MemoryReader:
                 pass
         return players
 
-    def read_players_epic(self):
-        players = []
-        try:
-            pm = pymem.Pymem("Among Us.exe")
-            allclients_ptr = pm.read_ulonglong(self.base_address + 0x58)
-            items_ptr = pm.read_ulonglong(allclients_ptr + 0x10)
-            items_count = pm.read_uint(allclients_ptr + 0x18)
-            for i in range(items_count):
-                item_base = pm.read_ulonglong(items_ptr + 0x20 + (i * 8))
-                item_char_ptr = pm.read_ulonglong(item_base + 0x18)
-                item_data_ptr = pm.read_ulonglong(item_char_ptr + 0x78)
-                item_role_ptr = pm.read_ulonglong(item_data_ptr + 0x68)
-                item_role = pm.read_uint(item_role_ptr + 0x20)
-                role_name = self.roles.get(item_role, str(item_role))
-                rb2d = pm.read_ulonglong(item_char_ptr + 0x148)
-                rb2d_cached = pm.read_ulonglong(rb2d + 0x10)
-                x_val = pm.read_float(rb2d_cached + 0xB0)
-                y_val = pm.read_float(rb2d_cached + 0xB4)
-                color_id = pm.read_uint(item_base + 0x48)
-                name_ptr = pm.read_ulonglong(item_base + 0x30)
-                name_len = pm.read_uint(name_ptr + 0x10)
-                name_addr = name_ptr + 0x14
-                raw = pm.read_bytes(name_addr, name_len * 2)
-                name = raw.decode('utf-16').rstrip('\x00')
-                alive = role_name not in ["Dead", "Dead (Imp)", "Guardian Angel"]
-                players.append({
-                    "key": name,
-                    "name": name,
-                    "role": role_name,
-                    "alive": alive,
-                    "color_id": color_id,
-                    "color_name": self.colors_name[color_id] if 0 <= color_id < len(self.colors_name) else str(color_id),
-                    "color_hex": self.colors_hex[color_id] if 0 <= color_id < len(self.colors_hex) else "#AAAAAA",
-                    "x": x_val,
-                    "y": y_val
-                })
-            pm.close_process()
-        except:
-            try:
-                pm.close_process()
-            except:
-                pass
-        return players
-
     def role_style(self, role):
         if role in ["Impostor", "Shapeshifter", "Phantom", "Viper"]:
             return {"fg_color": ("#2b0a0a", "#2b0a0a"), "text_color": "#ff4d4f"}
@@ -214,14 +158,14 @@ class MemoryReader:
         if key not in self.row_widgets:
             row = ctk.CTkFrame(self.players_list, corner_radius=10, fg_color=style["fg_color"])
             row.pack(fill="x", padx=6, pady=4)
-            name_lbl  = ctk.CTkLabel(row, width=280, anchor="w")
-            role_lbl  = ctk.CTkLabel(row, width=200, anchor="w")
+            name_lbl = ctk.CTkLabel(row, width=280, anchor="w")
+            role_lbl = ctk.CTkLabel(row, width=200, anchor="w")
             color_wrap = ctk.CTkFrame(row, fg_color="transparent")
-            color_box  = ctk.CTkFrame(color_wrap, width=22, height=18, corner_radius=4)
+            color_box = ctk.CTkFrame(color_wrap, width=22, height=18, corner_radius=4)
             color_box.pack_propagate(False)
-            color_lbl  = ctk.CTkLabel(row, width=140, anchor="w")
-            alive_lbl  = ctk.CTkLabel(row, width=80,  anchor="w")
-            pos_lbl    = ctk.CTkLabel(row, width=140, anchor="w")
+            color_lbl = ctk.CTkLabel(row, width=140, anchor="w")
+            alive_lbl = ctk.CTkLabel(row, width=80, anchor="w")
+            pos_lbl = ctk.CTkLabel(row, width=140, anchor="w")
             name_lbl.pack(side="left", padx=6, pady=6)
             role_lbl.pack(side="left", padx=6)
             color_wrap.pack(side="left", padx=(6, 4))
@@ -230,9 +174,13 @@ class MemoryReader:
             alive_lbl.pack(side="left", padx=6)
             pos_lbl.pack(side="left", padx=6)
             self.row_widgets[key] = {
-                "row": row, "name": name_lbl, "role": role_lbl,
-                "color_box": color_box, "color_lbl": color_lbl,
-                "alive": alive_lbl, "pos": pos_lbl
+                "row": row,
+                "name": name_lbl,
+                "role": role_lbl,
+                "color_box": color_box,
+                "color_lbl": color_lbl,
+                "alive": alive_lbl,
+                "pos": pos_lbl
             }
         w = self.row_widgets[key]
         w["row"].configure(fg_color=style["fg_color"])
